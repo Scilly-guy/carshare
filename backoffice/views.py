@@ -4,6 +4,7 @@ from crispy_forms.bootstrap import InlineField
 
 from django.conf import settings
 from django.contrib.postgres.fields import RangeBoundary
+from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -15,7 +16,7 @@ from django.utils import timezone
 
 from django_filters import FilterSet, ModelChoiceFilter
 
-from bookings.models import TsTzRange
+from bookings.models import TsTzRange, STATE_LATE
 
 from billing.models import (
     get_all_pending_approval as get_all_billing_accounts_pending_approval,
@@ -26,17 +27,66 @@ from drivers.models import (
     get_all_pending_approval as get_all_driver_profiles_pending_approval,
     DriverProfile,
 )
-from hardware.models import Vehicle
+from hardware.models import Vehicle, Box, BoxAction, Telemetry
 from users.models import User
 
 from .decorators import require_backoffice_access
-from .forms import DriverProfileApprovalForm, DriverProfileReviewForm
+from .forms import DriverProfileApprovalForm, DriverProfileReviewForm, CloseBookingForm
 
 
 @require_backoffice_access
 def home(request):
     start_today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
     end_tomorrow = start_today + timezone.timedelta(days=2)
+
+    drivers_pending = len(get_all_driver_profiles_pending_approval())
+    accounts_pending = len(get_all_billing_accounts_pending_approval())
+
+    most_recent_telemetry_query = (
+        Telemetry.objects.all().order_by("box", "-created_at").distinct("box")
+    )
+
+    registrations = list(
+        Vehicle.objects.all().values_list("registration", "box_id", "id").distinct()
+    )
+    most_recent_times_telemetry = []
+    for tel in most_recent_telemetry_query:
+        most_recent_times_telemetry.append(
+            {
+                "box_id": tel.box_id,
+                "most_recent": tel.created_at,
+            }
+        )
+
+    most_recent_soc_query = (
+        Telemetry.objects.filter(soc_percent__isnull=False)
+        .order_by("box", "-created_at")
+        .distinct("box")
+    )
+    most_recent_soc = []
+    for tel in most_recent_soc_query:
+        most_recent_soc.append(
+            {
+                "box_id": tel.box_id,
+                "soc": tel.soc_percent,
+                "created_at": tel.created_at,
+                "locked": tel.box.locked,
+            }
+        )
+
+    for soc_tel in most_recent_soc:
+        for tel in most_recent_times_telemetry:
+            if tel["box_id"] == soc_tel["box_id"]:
+                soc_tel["most_recent"] = tel["most_recent"]
+                break
+        for reg, box, id in registrations:
+            if box == soc_tel["box_id"]:
+                soc_tel["registration"] = reg
+                soc_tel["vehicle_id"] = id
+                break
+
+    most_recent_soc.sort(key=lambda x: x["vehicle_id"], reverse=True)
+
     context = {
         "menu": "dashboard",
         "user": request.user,
@@ -47,6 +97,12 @@ def home(request):
                 RangeBoundary(),
             ),
         ).order_by("-reservation_time"),
+        "late_bookings": Booking.objects.filter(
+            state=STATE_LATE,
+        ).order_by("-reservation_time"),
+        "drivers_pending": drivers_pending,
+        "accounts_pending": accounts_pending,
+        "telemetry": most_recent_soc,
     }
     return render(request, "backoffice/home.html", context)
 
@@ -305,3 +361,97 @@ def vehicles(request):
     context["page_range"] = page_range
 
     return render(request, "backoffice/vehicles.html", context)
+
+
+@require_backoffice_access
+def close_booking(request, booking_id):
+    booking = Booking.objects.get(pk=booking_id)
+
+    form = CloseBookingForm(request.GET or None)
+    if form.is_valid():
+        should_lock = form.cleaned_data.get("should_lock")
+        return_url = form.cleaned_data.get("return_url")
+    else:
+        should_lock = False
+        return_url = reverse("backoffice_home")
+
+    # Don't allow closing the booking if it hasn't started yet.
+    if not booking.reservation_started():
+        message = f"Failed to close booking #{booking_id} as it hasn't started yet."
+        messages.error(request, message)
+        return redirect(return_url)
+
+    # FIXME: potential race condition as booking state could have been changed elsewhere
+    if not booking.in_closeable_state():
+        message = f"Failed to close booking #{booking_id} as it is in an inappropriate state: {booking.get_state_display()}."
+        messages.error(request, message)
+        return redirect(return_url)
+
+    booking.state = Booking.STATE_INACTIVE
+    booking.save()
+
+    box = Box.objects.get(pk=booking.vehicle.box.id)
+    # FIXME: May also be a race condition
+    if box.current_booking == booking:
+        box.current_booking = None
+        box.unlocked_by = None
+        box.save()
+
+    message = f"Booking #{booking_id} closed."
+    messages.success(request, message)
+
+    if should_lock:
+        time_to_expire = timezone.now() + timezone.timedelta(minutes=10)
+        action = BoxAction(
+            action="lock",
+            created_at=timezone.now(),
+            expires_at=time_to_expire,
+            box=box,
+            user_id=request.user.id,
+        )
+        action.save()
+
+        box = Box.objects.get(pk=booking.vehicle.box.id)
+        box.locked = True
+        box.save()
+
+        message = f"Lock action sent to vehicle {box.vehicle.registration}."
+        messages.success(request, message)
+
+    return redirect(return_url)
+
+
+@require_backoffice_access
+def lock(request, id):
+    vehicle = Vehicle.objects.get(pk=id)
+    perform_box_action(
+        request=request, vehicle=vehicle, action_to_perform="lock", user=request.user
+    )
+    return redirect(reverse("backoffice_vehicles"))
+
+
+@require_backoffice_access
+def unlock(request, id):
+    vehicle = Vehicle.objects.get(pk=id)
+    perform_box_action(
+        request=request, vehicle=vehicle, action_to_perform="unlock", user=request.user
+    )
+    return redirect(reverse("backoffice_vehicles"))
+
+
+def perform_box_action(request, vehicle, action_to_perform, user):
+    box_id = vehicle.box
+    time_to_expire = timezone.now() + timezone.timedelta(minutes=10)
+    action = BoxAction(
+        action=action_to_perform,
+        created_at=timezone.now(),
+        expires_at=time_to_expire,
+        box=box_id,
+        user_id=user.id,
+    )
+    action.save()
+    vehicle.box.locked = True if action_to_perform == "lock" else False
+    vehicle.box.save()
+    # FIXME: message is dispatched regardless of outcome - may be worth exploring options to send different messages
+    message = f"{user.username} has {action_to_perform}ed vehicle {vehicle.name} ({vehicle.registration})"
+    messages.success(request, message)

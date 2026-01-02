@@ -11,9 +11,23 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 import os
+import sentry_sdk
 import stripe
 
 from pathlib import Path
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.logging import ignore_logger
+
+SENTRY_DSN = os.environ.get("SENTRY_DSN", None)
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        auto_session_tracking=False,
+        traces_sample_rate=0,
+        environment=os.environ.get("SENTRY_ENVIRONMENT", "development"),
+    )
+    ignore_logger("django.security.DisallowedHost")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -57,6 +71,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django.contrib.sites",
     "django.contrib.staticfiles",
+    "django_extensions",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -94,6 +109,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "carshare.context_processors.get_contact_info",
             ],
         },
     },
@@ -265,3 +281,13 @@ LOGGING = {
         },
     },
 }
+
+# contact details
+CONTACT_PHONE = os.environ.get("CONTACT_PHONE", "0111 222 333")
+CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "your@email")
+CONTACT_INTERNATIONAL_PHONE = os.environ.get(
+    "CONTACT_INTERNATIONAL_PHONE", "+44111222333"
+)
+
+# old telemetry is deleted on the first of every month at 3am, it will be kept if younger than this value
+TELEMETRY_AGE_DAYS = int(os.environ.get("TELEMETRY_AGE_DAYS", 180))

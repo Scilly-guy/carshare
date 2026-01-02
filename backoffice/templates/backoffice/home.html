@@ -3,6 +3,29 @@
 {% block heading %}Dashboard{% endblock %}
 
 {% block main %}
+  {% if drivers_pending > 0 or accounts_pending > 0 %}
+    <a href="{% url 'backoffice_approvals' %}" class="bg-yellow-300 flex-row hover:bg-yellow-100 m-2 p-2 text-sm">
+      ❗
+      {% if accounts_pending > 0 %}
+        <div class="inline-block">
+          {% if accounts_pending > 1 %}
+            {{accounts_pending}} billing accounts require approval
+          {% else %}
+            1 billing account requires approval
+          {% endif %}
+        </div>
+      {% endif %}
+      {% if drivers_pending > 0 %}
+        <div class="inline-block">
+          {% if drivers_pending > 1 %}
+            {{drivers_pending}} drivers require approval
+          {% else %}
+            1 driver requires approval
+          {% endif %}</div>
+      {% endif %}
+      ❗
+    </a>
+  {% endif %}
   <div class="p-4 sm:p-6 lg:p-8">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
@@ -18,6 +41,38 @@
 
           </div>
         </div>
+      </div>
+    </div>
+    {% if late_bookings|length > 0 %}
+    <div class="sm:flex sm:items-center">
+      <div class="sm:flex-auto">
+        <h1 class="text-xl font-semibold text-gray-900 mt-8">Late bookings</h1>
+      </div>
+    </div>
+    <div class="mt-8 flex flex-col">
+      <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+          <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+
+            {% include "backoffice/bookings/late_bookings_list.html" with bookings=bookings %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="sm:flex sm:items-center my-8">
+      <div class="sm:flex-auto">
+        <h1 class="text-xl font-semibold text-gray-900">Vehicle Battery Levels</h1>
+      </div>
+    </div>
+    <div class="mt-8 flex flex-col">
+      <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+          <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+            {% include "backoffice/telemetry/telemetry_list.html" with telemetry=telemetry %}
+          </div>
       </div>
     </div>
   </div>

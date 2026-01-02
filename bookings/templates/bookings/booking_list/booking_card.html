@@ -12,6 +12,10 @@
       <div class="px-4 py-5 sm:px-6 rounded-t-lg bg-green-600">
         <h3 class="text-lg leading-6 font-medium text-white">Current Booking</h3>
       </div>
+    {% elif booking.reservation_ended and booking.is_current_booking_on_box %}
+      <div class="px-4 py-5 sm:px-6 rounded-t-lg bg-red-600">
+        <h3 class="text-lg leading-6 font-medium text-white">Late Booking</h3>
+      </div>
     {% elif booking.reservation_ended %}
       <div class="px-4 py-5 sm:px-6 rounded-t-lg bg-gray-400">
         <h3 class="text-lg leading-6 font-medium text-white">Completed Booking</h3>
@@ -75,6 +79,12 @@
             {% include "bookings/booking_list/lock-button.html" %}
           {% endif %}
         {% elif booking.reservation_ended %}
+          {% if booking.is_current_booking_on_box %}
+            {% user_can_access_booking user booking as access %}
+            {% if access %}
+              {% include "bookings/booking_list/lock-button.html" %}
+            {% endif %}
+          {% endif %}
         {% else %}
           <div class="w-0 flex-1 flex">
             <a href="{% url 'bookings_edit' booking.id %}"
