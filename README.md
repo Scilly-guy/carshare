@@ -29,15 +29,15 @@ First, clone this repository, then set up the dependencies with docker by runnin
 Install dependencies (setting up a virtualenvironment in your preferred way first):
 
     $ poetry install
+    
+Install the customised version of `crispy-tailwind`.
+
+    $ make setup-crispy-tailwind
 
 Initialise the database, and setup a super user.
 
     $ poetry run python manage.py migrate
     $ poetry run python manage.py createsuperuser
-
-Install the customised version of `crispy-tailwind`.
-
-    $ make setup-crispy-tailwind
 
 Install the theme JS dependencies.
 
