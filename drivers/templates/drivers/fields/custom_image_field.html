@@ -92,7 +92,7 @@
                class="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
           <span x-show="hasUpload && !dropped" class="p-1 bg-white">Upload successful, you may select a different file</span>
           <span x-show="!hasUpload && !dropped" class="p-1 bg-white">Select a file</span>
-          <span x-show="dropped" class="p-1 bg-white">Select a different file (if you like)</span>
+          <span x-show="dropped" class="p-1 bg-white">Upload a different file</span>
 
           <input id="{{ field.id_for_label }}" name="{{ field.name }}" type="file" class="sr-only"
                  accept=".png,.jpg,.jpeg,.pdf"
