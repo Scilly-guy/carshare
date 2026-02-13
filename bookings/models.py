@@ -12,6 +12,7 @@ from django.db import models
 from django.db.models import Func, Q, Subquery, DateTimeField
 from django.utils import timezone
 from psycopg2.extras import DateTimeTZRange
+from django.forms import ValidationError
 
 from billing.models import BillingAccount
 from billing.pricing import calculate_booking_cost
@@ -38,15 +39,7 @@ STATE_LATE = "late"
 STATE_ENDED = "ended"
 STATE_BILLED = "billed"
 
-ALLOWED_TRANSITIONS = {
-    STATE_PENDING: {STATE_ACTIVE, STATE_INACTIVE,STATE_ENDED,STATE_CANCELLED},
-    STATE_CANCELLED:None,
-    STATE_ACTIVE: {STATE_INACTIVE, STATE_LATE},
-    STATE_INACTIVE:{STATE_ENDED,STATE_ACTIVE},
-    STATE_LATE:{STATE_INACTIVE},
-    STATE_ENDED:{STATE_BILLED},
-    STATE_BILLED:None
-}
+
 
 
 class Booking(models.Model):
@@ -57,6 +50,16 @@ class Booking(models.Model):
     STATE_LATE = STATE_LATE
     STATE_ENDED = STATE_ENDED
     STATE_BILLED = STATE_BILLED
+
+    ALLOWED_TRANSITIONS = {
+        STATE_PENDING: {STATE_PENDING, STATE_ACTIVE, STATE_INACTIVE,STATE_ENDED,STATE_CANCELLED},
+        STATE_CANCELLED:{STATE_CANCELLED},
+        STATE_ACTIVE: {STATE_ACTIVE, STATE_INACTIVE, STATE_LATE},
+        STATE_INACTIVE:{STATE_INACTIVE, STATE_ENDED, STATE_ACTIVE},
+        STATE_LATE:{STATE_LATE, STATE_INACTIVE},
+        STATE_ENDED:{STATE_ENDED, STATE_BILLED},
+        STATE_BILLED:{STATE_BILLED}
+    }
 
     STATE_CHOICES = [
         (STATE_PENDING, "pending"),
@@ -88,6 +91,9 @@ class Booking(models.Model):
         BillingAccount,
         on_delete=models.PROTECT,
         related_name="bookings",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
     )
 
     state = models.CharField(
@@ -225,6 +231,10 @@ class Booking(models.Model):
         for member in self.billing_account.billingaccountmember_set.all():
             if member.user == user:
                 return member.can_make_bookings
+            
+    def can_transition_to(self, new_state):
+        allowed = self.ALLOWED_TRANSITIONS.get(self.state)
+        return allowed is not None and new_state in allowed
 
 
 def get_available_vehicles(start, end, vehicle_types):
