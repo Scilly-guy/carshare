@@ -40,8 +40,6 @@ STATE_ENDED = "ended"
 STATE_BILLED = "billed"
 
 
-
-
 class Booking(models.Model):
     STATE_PENDING = STATE_PENDING
     STATE_CANCELLED = STATE_CANCELLED
@@ -52,13 +50,19 @@ class Booking(models.Model):
     STATE_BILLED = STATE_BILLED
 
     ALLOWED_TRANSITIONS = {
-        STATE_PENDING: {STATE_PENDING, STATE_ACTIVE, STATE_INACTIVE,STATE_ENDED,STATE_CANCELLED},
-        STATE_CANCELLED:{STATE_CANCELLED},
+        STATE_PENDING: {
+            STATE_PENDING,
+            STATE_ACTIVE,
+            STATE_INACTIVE,
+            STATE_ENDED,
+            STATE_CANCELLED,
+        },
+        STATE_CANCELLED: {STATE_CANCELLED},
         STATE_ACTIVE: {STATE_ACTIVE, STATE_INACTIVE, STATE_LATE},
-        STATE_INACTIVE:{STATE_INACTIVE, STATE_ENDED, STATE_ACTIVE},
-        STATE_LATE:{STATE_LATE, STATE_INACTIVE},
-        STATE_ENDED:{STATE_ENDED, STATE_BILLED},
-        STATE_BILLED:{STATE_BILLED}
+        STATE_INACTIVE: {STATE_INACTIVE, STATE_ENDED, STATE_ACTIVE},
+        STATE_LATE: {STATE_LATE, STATE_INACTIVE},
+        STATE_ENDED: {STATE_ENDED, STATE_BILLED},
+        STATE_BILLED: {STATE_BILLED},
     }
 
     STATE_CHOICES = [
@@ -231,7 +235,7 @@ class Booking(models.Model):
         for member in self.billing_account.billingaccountmember_set.all():
             if member.user == user:
                 return member.can_make_bookings
-            
+
     def can_transition_to(self, new_state):
         allowed = self.ALLOWED_TRANSITIONS.get(self.state)
         return allowed is not None and new_state in allowed

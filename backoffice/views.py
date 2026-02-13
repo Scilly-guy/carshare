@@ -471,17 +471,19 @@ def perform_box_action(request, vehicle, action_to_perform, user):
 
 @require_backoffice_access
 def edit_booking(request, booking_id):
-    booking=None
+    booking = None
     if request.method == "POST":
         with transaction.atomic():
             try:
-                booking = Booking.objects.select_for_update(nowait=True).get(pk=booking_id)
+                booking = Booking.objects.select_for_update(nowait=True).get(
+                    pk=booking_id
+                )
             except DatabaseError:
                 message = f"Booking #{booking_id} is being edited by another process."
                 messages.error(request, message)
-                context={
-                    "user":request.user,
-                    "menu":"bookings",
+                context = {
+                    "user": request.user,
+                    "menu": "bookings",
                 }
                 return render(request, "backoffice/bookings/edit_booking.html", context)
             form = BackofficeEditBookingForm(request.POST, instance=booking)
@@ -498,7 +500,7 @@ def edit_booking(request, booking_id):
                     )
 
     else:
-        booking=Booking.objects.get(pk=booking_id)
+        booking = Booking.objects.get(pk=booking_id)
         form = BackofficeEditBookingForm(instance=booking)
     context = {
         "booking": booking,
