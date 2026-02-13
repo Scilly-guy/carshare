@@ -8,12 +8,13 @@ from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.forms import ModelChoiceField
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.db.utils import DatabaseError
 from django.utils.dateparse import parse_datetime
 from django.http import JsonResponse
 
@@ -40,7 +41,7 @@ from .decorators import require_backoffice_access
 from .forms import (
     DriverProfileApprovalForm,
     DriverProfileReviewForm,
-    EditBookingForm,
+    BackofficeEditBookingForm,
     CloseBookingForm,
 )
 
@@ -470,24 +471,35 @@ def perform_box_action(request, vehicle, action_to_perform, user):
 
 @require_backoffice_access
 def edit_booking(request, booking_id):
-    booking = Booking.objects.get(pk=booking_id)
-
+    booking=None
     if request.method == "POST":
-        form = EditBookingForm(request.POST, instance=booking)
-        if form.is_valid():
-            reservation_time = form.cleaned_data.get("reservation_time")
-            booking.update_times(reservation_time.lower, reservation_time.upper)
+        with transaction.atomic():
             try:
-                form.save()
-                return redirect(reverse("backoffice_bookings"))
-            except IntegrityError as err:
-                form.add_error(
-                    None,
-                    "Your booking could not be changed because the vehicle is not available then.",
-                )
+                booking = Booking.objects.select_for_update(nowait=True).get(pk=booking_id)
+            except DatabaseError:
+                message = f"Booking #{booking_id} is being edited by another process."
+                messages.error(request, message)
+                context={
+                    "user":request.user,
+                    "menu":"bookings",
+                }
+                return render(request, "backoffice/bookings/edit_booking.html", context)
+            form = BackofficeEditBookingForm(request.POST, instance=booking)
+            if form.is_valid():
+                reservation_time = form.cleaned_data.get("reservation_time")
+                booking.update_times(reservation_time.lower, reservation_time.upper)
+                try:
+                    form.save()
+                    return redirect(reverse("backoffice_bookings"))
+                except IntegrityError as err:
+                    form.add_error(
+                        None,
+                        "Your booking could not be changed because the vehicle is not available then.",
+                    )
 
     else:
-        form = EditBookingForm(instance=booking)
+        booking=Booking.objects.get(pk=booking_id)
+        form = BackofficeEditBookingForm(instance=booking)
     context = {
         "booking": booking,
         "menu": "bookings",
