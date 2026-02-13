@@ -286,6 +286,7 @@ def review_driver_profile(request, id):
 
     return render(request, "backoffice/review_driver_profile.html", context)
 
+
 @require_backoffice_access
 def approve_driver_profile(request, id):
     context = {
@@ -541,6 +542,7 @@ def get_all_available_vehicles(request):
     # return HttpResponse(available_vehicles_json,content_type="application/json")
     return JsonResponse(available_vehicles_json, safe=False)
 
+
 def user_details(request, id, anchor=None):
     selected_user_details = get_object_or_404(User, pk=id)
     selected_user_driver_profiles = DriverProfile.objects.filter(user__id=id)
@@ -634,4 +636,3 @@ def edit_purchase_order(request, id, ba_id):
         "menu": "users",
     }
     return render(request, "backoffice/users/edit_po.html", context)
-
