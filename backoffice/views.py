@@ -575,7 +575,7 @@ def vehicle_details(request, vehicle_id):
             most_recent[key]["age"] = breakdown_timedelta(most_recent[key]["age"])
 
     if most_recent["soc"] is not None:
-        most_recent["soc_dial"] = 251.2 * (1 - t.soc_percent / 100)
+        most_recent["soc_dial"] = 251.2 * (1 - most_recent["soc"].get('value') / 100)
     else:
         most_recent["soc_dial"] = 0
 
