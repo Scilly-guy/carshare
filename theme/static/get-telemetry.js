@@ -52,7 +52,7 @@ function drawChart(svgElement, points) {
 
     // Determine min and max values for scaling
     const minX = Math.min(...points.map(p => p.x));
-    const maxX = Math.max(...points.map(p => p.x));
+    let maxX = Math.max(...points.map(p => p.x));
     
     const minY = 0;
     const maxY = 100;
@@ -65,6 +65,7 @@ function drawChart(svgElement, points) {
     
 
     // Convert points to chart coordinates
+    maxX = maxX===minX?maxX+0.0001:maxX;
     const scaleX = (chartWidth - 2 * padding) / (maxX - minX);
     const scaleY = (chartHeight - 4 * padding) / (maxY - minY);
     function transformPoint(p) {
