@@ -56,4 +56,5 @@ urlpatterns = [
         name="users_profile_my_details",
     ),
     path("incomplete/", views.incomplete, name="users_incomplete"),
+    path("email/edit",views.edit_email,name="edit_email"),
 ]
