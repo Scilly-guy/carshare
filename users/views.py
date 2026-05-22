@@ -12,6 +12,7 @@ from .forms import (
     LoginForm,
     ResetPasswordForm,
     ResetPasswordKeyForm,
+    ChangeEmailForm
 )
 from .models import User
 from .sms import send_sms_verification_code
@@ -125,6 +126,19 @@ def profile_my_details(request):
     context = {
         "menu": "profile",
         "profile_menu": "details",
+        "user_email":request.user.email,
+        "user_mobile":request.user.mobile
     }
 
     return render(request, "users/profile_my_details.html", context)
+
+@login_required
+def edit_email(request):
+    if request.method is not "POST":
+        form = ChangeEmailForm
+    context={
+        "menu":"profile",
+        "form": form
+    }
+
+    return render(request, "users/change_email.html",context)
