@@ -435,3 +435,9 @@ class User(AbstractUser):
         for bam in self.billingaccountmember_set.all():
             if bam.billing_account.valid:
                 return True
+
+class PendingEmailChange(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    new_email = models.EmailField()
+    token = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
