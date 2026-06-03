@@ -88,8 +88,8 @@ class ConfirmEmailView(views.ConfirmEmailView):
     template_name = "users/confirm_email.html"
     # Override to redirect to profile page after email confirmation instead of homepage
     def get_redirect_url(self):
-        #check if user has driver profile or billing account, if they have either redirect to account_email page otherwise use default
-        if self.request.user.has_valid_driver_profile() or self.request.user.has_billing_account():
+        #check if user is not anonymous user and has a valid driver profile or billing account, if so redirect to email management page, otherwise redirect to profile details page
+        if self.request.user.is_authenticated :
             return reverse_lazy("account_email")
         return super().get_redirect_url()
 
