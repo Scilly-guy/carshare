@@ -12,6 +12,7 @@ from .forms import (
     LoginForm,
     ResetPasswordForm,
     ResetPasswordKeyForm,
+    ChangeEmailForm
 )
 from .models import User
 from drivers.models import FullDriverProfile
@@ -86,7 +87,15 @@ class EmailVerificationSentView(views.EmailVerificationSentView):
 
 class ConfirmEmailView(views.ConfirmEmailView):
     template_name = "users/confirm_email.html"
+    # Override to redirect to profile page after email confirmation instead of homepage
+    def get_redirect_url(self):
+        #check if user is not anonymous user and has a valid driver profile or billing account, if so redirect to email management page, otherwise redirect to profile details page
+        if self.request.user.is_authenticated :
+            return reverse_lazy("account_email")
+        return super().get_redirect_url()
 
+class EmailView(views.EmailView):
+    template_name = "users/change_email.html"
 
 @login_required
 def add_mobile(request):
@@ -132,3 +141,14 @@ def profile_my_details(request):
     }
 
     return render(request, "users/profile_my_details.html", context)
+
+@login_required
+def edit_email(request):
+    if request.method is not "POST":
+        form = ChangeEmailForm
+    context={
+        "menu":"profile",
+        "form": form
+    }
+
+    return render(request, "users/change_email.html",context)
