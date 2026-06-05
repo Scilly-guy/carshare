@@ -1,0 +1,23 @@
+<!-- Driver Profile Card -->
+<div class="bg-white py-6 px-4 sm:p-6">
+  <h2 class="text-lg font-medium leading-6 text-gray-900">Driver Profile</h2>
+  <p class="mt-1 text-sm text-gray-500">Manage your driver information and preferences.</p>
+    <div class="mt-4 ">
+    <p class="flex flex-col justify-between"><strong>License Number:</strong> <span>{{ driver_profile.license_number }}</span></p>
+    <p class="flex flex-col"><strong>License Expiry Date:</strong> <span>{{ driver_profile.license_expiry_date }}</span></p>
+    <p class="flex flex-col"><strong>Full Name:</strong> <span>{{ driver_profile.full_name }}</span></p>
+    <div class="flex flex-row"><strong>Address:</strong> 
+        <p class="flex flex-col">{% if driver_profile.address_line_1 %}<span>{{ driver_profile.address_line_1 }}</span>{% endif %}
+        {% if driver_profile.address_line_2 %}<span>{{ driver_profile.address_line_2 }}</span>{% endif %}
+        {% if driver_profile.address_line_3 %}<span>{{ driver_profile.address_line_3 }}</span>{% endif %}
+        {% if driver_profile.address_line_4 %}<span>{{ driver_profile.address_line_4 }}</span>{% endif %}
+        {% if driver_profile.postcode %}<span>{{ driver_profile.postcode }}</span>{% endif %}
+        {% if driver_profile.country %}<span>{{ driver_profile.country }}</span>{% endif %}</p>
+    </div>
+    </div>
+    <div class="mt-4">
+    <a href="" class="border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 p-1">
+        Edit Driver Profile
+    </a>
+    </div>
+</div>
