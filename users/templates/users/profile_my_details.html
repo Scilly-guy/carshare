@@ -5,7 +5,11 @@
     <div class="shadow sm:overflow-hidden sm:rounded-md">
       <div class="bg-white py-6 px-4 sm:p-6">
         <h2 class="text-lg font-medium leading-6 text-gray-900">My details</h2>
-        {% include "under_construction.html" %}
+        <p class="mt-1 text-sm text-gray-500">Manage your personal information and preferences.</p>
+        <div class="mt-4">
+          <p><strong>Email:</strong> {{ user_email }}</p>
+          <p><strong>Mobile:</strong> {{ user_mobile }}</p>
+        </div>
       </div>
     </div>
   </section>
