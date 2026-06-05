@@ -122,9 +122,13 @@ def verify_mobile(request):
 
 @login_required
 def profile_my_details(request):
+    print("there are this many driver profiles: ", request.user.driver_profiles.count())
     context = {
         "menu": "profile",
         "profile_menu": "details",
+        "user_email":request.user.email,
+        "user_mobile":request.user.mobile,
+        "driver_profiles": request.user.driver_profiles.all(),
     }
 
     return render(request, "users/profile_my_details.html", context)
