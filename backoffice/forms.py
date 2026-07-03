@@ -248,7 +248,7 @@ class BackofficeEditBookingForm(ModelForm):
                 f"This booking has been updated by a different process!"
             )
         new_state = cleaned.get("state")
-        if not self.instance.can_transition_to(new_state):
+        if new_state is None or not self.instance.can_transition_to(new_state):
             raise ValidationError(
                 f"Transition from {self.instance.state} to {new_state} not allowed."
             )
