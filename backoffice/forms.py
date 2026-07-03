@@ -233,7 +233,11 @@ class BackofficeEditBookingForm(ModelForm):
         if instance:
             self.fields["updated_at"].initial = instance.updated_at
             allowed = Booking.ALLOWED_TRANSITIONS.get(instance.state)
-            self.fields["state"].choices = [(s, s) for s in allowed]
+            if allowed is not None:
+                self.fields["state"].choices = [(s, s) for s in allowed]
+            else:
+                self.fields["state"].choices = [(instance.state, instance.state)]
+                self.fields["state"].disabled = True
 
     def clean(self):
         cleaned = super().clean()
