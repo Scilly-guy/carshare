@@ -1,5 +1,6 @@
 const base_url=document.getElementById("base_url").getAttribute("href");
-const available_vehicles_url="http://"+base_url+document.getElementById("available_vehicles_url").getAttribute("href");
+const available_vehicles_path=document.getElementById("available_vehicles_url").getAttribute("href");
+const available_vehicles_url=new URL(available_vehicles_path,window.location.origin);
 const csrftoken=document.querySelector("[name=csrfmiddlewaretoken]").value;
 const start_input=document.getElementById("id_reservation_time_0");
 const end_input=document.getElementById("id_reservation_time_1");
