@@ -48,6 +48,7 @@ class Booking(models.Model):
     STATE_ENDED = STATE_ENDED
     STATE_BILLED = STATE_BILLED
 
+    # every state should be allowed to transition to itself
     ALLOWED_TRANSITIONS = {
         STATE_PENDING: {
             STATE_PENDING,
