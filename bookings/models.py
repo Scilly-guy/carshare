@@ -12,7 +12,6 @@ from django.db import models
 from django.db.models import Func, Q, Subquery, DateTimeField
 from django.utils import timezone
 from psycopg2.extras import DateTimeTZRange
-from django.forms import ValidationError
 
 from billing.models import BillingAccount
 from billing.pricing import calculate_booking_cost
