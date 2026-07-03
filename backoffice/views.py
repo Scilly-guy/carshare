@@ -525,6 +525,8 @@ def get_all_available_vehicles(request):
         booking_id = data.get("booking_id")
     else:
         start = None
+        end = None
+        booking_id = None
     if start and end:
         start = parse_datetime(start)
         end = parse_datetime(end)
