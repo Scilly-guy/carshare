@@ -484,11 +484,7 @@ def edit_booking(request, booking_id):
             except DatabaseError:
                 message = f"Booking #{booking_id} is being edited by another process."
                 messages.error(request, message)
-                context = {
-                    "user": request.user,
-                    "menu": "bookings",
-                }
-                return render(request, "backoffice/bookings/edit_booking.html", context)
+                return redirect(reverse("backoffice_bookings"))
             form = BackofficeEditBookingForm(request.POST, instance=booking)
             if form.is_valid():
                 reservation_time = form.cleaned_data.get("reservation_time")
