@@ -503,7 +503,7 @@ def edit_booking(request, booking_id):
                     )
 
     else:
-        booking = Booking.objects.get(pk=booking_id)
+        booking = get_object_or_404(Booking, pk=booking_id)
         form = BackofficeEditBookingForm(instance=booking)
     context = {
         "booking": booking,
