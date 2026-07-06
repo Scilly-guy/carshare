@@ -57,6 +57,8 @@ const available_vehicles={
 }
 
 function get_available_vehicles(){
+    if(!start_input.value || !end_input.value) return;
+    if(new Date(start_input.value)>new Date(end_input.value)) return;
     fetch(available_vehicles_path,
         {
             method:"POST",
