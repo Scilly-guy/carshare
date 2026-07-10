@@ -159,6 +159,17 @@ def home(request):
                 )
             bookings_for_calendar[-1]["bookings"].append(temp_booking)
 
+    for r in registrations:
+        found = False
+        for b in bookings_for_calendar:
+            if b["registration"] == r[0]:
+                found = True
+                break
+        if not found:
+            bookings_for_calendar.append({"registration": r[0], "bookings": []})
+
+    bookings_for_calendar.sort(key=lambda x: x["registration"])
+
     context = {
         "menu": "dashboard",
         "user": request.user,
