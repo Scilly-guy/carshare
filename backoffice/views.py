@@ -518,7 +518,9 @@ def get_all_available_vehicles(request):
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
-            return JsonResponse({"error": {"message": "Invalid JSON data", "status": 400}}, status=400)
+            return JsonResponse(
+                {"error": {"message": "Invalid JSON data", "status": 400}}, status=400
+            )
         start = data.get("start")
         end = data.get("end")
         booking_id = data.get("booking_id")
