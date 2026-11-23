@@ -2,7 +2,7 @@
 
 <div class="pb-6" x-data="{
   hasUpload: '{{ field.value|default:''|escapejs }}'.length > 0,
-  nodeName: '{{ field.value|default:''|escapejs }}'.length > 0 && '{{ field.value|default:''|escapejs }}'.split('.').at(-1) != 'pdf' ? 'IMG' : 'SVG',
+  nodeName: '{{ field.value|default:''|escapejs }}'.length > 0 && '{{ field.value|default:''|escapejs }}'.split('.').at(-1).toLowerCase() != 'pdf' ? 'IMG' : 'SVG',
   src : '{{ field.value|default:''|escapejs }}'.length ? '/media/{{ field.value|default:''|escapejs }}' : undefined,
   readyToDrop:false,
   errorText:false,
