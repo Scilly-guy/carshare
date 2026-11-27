@@ -11,6 +11,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.db import DatabaseError
 
 from .forms import BusinessBillingAccountForm, InviteMemberForm, UpdatePurchaseOrderForm
 from .models import (
@@ -326,7 +327,15 @@ def profile_remove_member(request, billing_account, member):
 def accept_invitation(request, invitation):
     try:
         invitation = BillingAccountMemberInvitation.objects.get(secret=invitation)
-    except BillingAccountMemberInvitation.DoesNotExist:
+    except DatabaseError:
+        log.exception("Database error when trying to accept invitation")
+        message = "There was a problem with the database, please try again later."
+        messages.error(request, message)
+        if request.user.can_view_bookings():
+            return redirect("billing_accounts_other_memberships")
+        else:
+            return redirect("users_incomplete")
+    except:
         message = "Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
         messages.error(request, message)
         if request.user.can_view_bookings():
