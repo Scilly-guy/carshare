@@ -329,12 +329,18 @@ def accept_invitation(request, invitation):
     except:
         message = f"Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
         messages.error(request, message)
-        return redirect("billing_accounts_other_memberships")
+        if request.user.can_view_bookings():
+            return redirect("billing_accounts_other_memberships")
+        else:
+            return redirect("users_incomplete")
 
     if invitation.billing_account.owner == request.user:
         message = f"You cannot become a member of a billing account you own."
         messages.error(request, message)
-        return redirect("billing_accounts_other_memberships")
+        if request.user.can_view_bookings():
+            return redirect("billing_accounts_other_memberships")
+        else:
+            return redirect("users_incomplete")
     else:
         member = BillingAccountMember()
 
@@ -351,7 +357,10 @@ def accept_invitation(request, invitation):
         owner_name = f"{billing_account.owner.first_name.title()} {billing_account.owner.last_name.title()}"
         message = f"You are now a member of the billing account {billing_account.display_name}, owned by {owner_name}."
         messages.success(request, message)
-    return redirect("billing_accounts_other_memberships")
+    if request.user.can_view_bookings():
+        return redirect("billing_accounts_other_memberships")
+    else:
+        return redirect("users_incomplete")
 
 
 @login_required
