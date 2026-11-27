@@ -31,6 +31,7 @@
   <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md text-gray-200"
   x-data="{dragCounter:0}"
   @drop="
+  $event.preventDefault();
   const fileInput = document.getElementById('{{ field.id_for_label|escapejs }}')
   if($event?.dataTransfer?.files?.length>0){
     const {type}=$event.dataTransfer.files[0];
@@ -47,7 +48,6 @@
       $event.currentTarget.classList.remove('border-teal-600');
       $event.currentTarget.classList.add('border-gray-300');
     }
-    $event.preventDefault();
   }
   else{
       errorText=true;
