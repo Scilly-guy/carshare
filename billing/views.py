@@ -246,31 +246,40 @@ def profile_manage_members(request, billing_account):
     if request.method == "POST":
         form = InviteMemberForm(billing_account, request.user, request.POST)
         if form.is_valid():
-            # TODO: If form is submitted, generate the email to the invited member.
-            invite = form.save()
+            email_address = form.cleaned_data["email"]
+            existing_invitation = BillingAccountMemberInvitation.objects.filter(
+                billing_account=billing_account, email=email_address).first()
+            if existing_invitation:
+                messages.error(
+                    request,
+                    f"An invitation has already been sent to {email_address} for this account.",
+                )
+            else:
+                # TODO: If form is submitted, generate the email to the invited member.
+                invite = form.save()
 
-            email_ctx = {
-                "user": request.user,
-                "billing_account": billing_account,
-                "invite_url": request.build_absolute_uri(
-                    reverse("billing_account_accept_invitation", args=(invite.secret,))
-                ),
-                "signup_url": request.build_absolute_uri(reverse("account_signup")),
-            }
-            email = EmailMessage(
-                "Invitation to join a billing account on GO-EV Car Share",
-                render_to_string(
-                    "billing/emails/billing_account_invite.txt", email_ctx
-                ),
-                None,
-                [invite.email],
-                reply_to=(
-                    None
-                    if settings.DEFAULT_REPLY_TO_EMAIL is None
-                    else [settings.DEFAULT_REPLY_TO_EMAIL]
-                ),
-            )
-            email.send(fail_silently=False)
+                email_ctx = {
+                    "user": request.user,
+                    "billing_account": billing_account,
+                    "invite_url": request.build_absolute_uri(
+                        reverse("billing_account_accept_invitation", args=(invite.secret,))
+                    ),
+                    "signup_url": request.build_absolute_uri(reverse("account_signup")),
+                }
+                email = EmailMessage(
+                    "Invitation to join a billing account on GO-EV Car Share",
+                    render_to_string(
+                        "billing/emails/billing_account_invite.txt", email_ctx
+                    ),
+                    None,
+                    [invite.email],
+                    reply_to=(
+                        None
+                        if settings.DEFAULT_REPLY_TO_EMAIL is None
+                        else [settings.DEFAULT_REPLY_TO_EMAIL]
+                    ),
+                )
+                email.send(fail_silently=False)
             form = InviteMemberForm(billing_account, request.user)
 
     else:
@@ -330,13 +339,9 @@ def accept_invitation(request, invitation):
     except DatabaseError:
         log.exception("Database error when trying to accept invitation")
         message = "There was a problem with the database, please try again later."
-        messages.error(request, message)
-        if request.user.can_view_bookings():
-            return redirect("billing_accounts_other_memberships")
-        else:
-            return redirect("users_incomplete")
     except:
         message = "Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
+    finally:
         messages.error(request, message)
         if request.user.can_view_bookings():
             return redirect("billing_accounts_other_memberships")
