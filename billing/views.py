@@ -337,6 +337,7 @@ def profile_remove_member(request, billing_account, member):
 
 @login_required
 def accept_invitation(request, invitation):
+    message = None
     try:
         invitation = BillingAccountMemberInvitation.objects.get(secret=invitation)
     except DatabaseError:
@@ -345,11 +346,12 @@ def accept_invitation(request, invitation):
     except:
         message = "Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
     finally:
-        messages.error(request, message)
-        if request.user.can_view_bookings():
-            return redirect("billing_accounts_other_memberships")
-        else:
-            return redirect("users_incomplete")
+        if message is not None:
+            messages.error(request, message)
+            if request.user.can_view_bookings():
+                return redirect("billing_accounts_other_memberships")
+            else:
+                return redirect("users_incomplete")
 
     if invitation.billing_account.owner == request.user:
         message = f"You cannot become a member of a billing account you own."
