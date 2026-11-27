@@ -347,7 +347,9 @@ def accept_invitation(request, invitation):
         member.save()
         invitation.delete()
 
-        message = f"You are now a member of the billing account {invitation.billing_account.account_name}."
+        billing_account = invitation.billing_account
+        owner_name = f"{billing_account.owner.first_name.title()} {billing_account.owner.last_name.title()}"
+        message = f"You are now a member of the billing account {billing_account.display_name}, owned by {owner_name}."
         messages.success(request, message)
     return redirect("billing_accounts_other_memberships")
 
