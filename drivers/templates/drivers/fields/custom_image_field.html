@@ -29,6 +29,7 @@
   {% endif %}
 
   <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md text-gray-200"
+  x-data="{dragCounter:0}"
   @drop="
   const fileInput = document.getElementById('{{ field.id_for_label|escapejs }}')
   if($event?.dataTransfer?.files?.length>0){
@@ -42,30 +43,35 @@
     }
     else{
       errorText=true;
-      $event.target.classList.add('border-dashed');
-      $event.target.classList.remove('border-teal-600');
-      $event.target.classList.add('border-gray-300');
+      $event.currentTarget.classList.add('border-dashed');
+      $event.currentTarget.classList.remove('border-teal-600');
+      $event.currentTarget.classList.add('border-gray-300');
     }
     $event.preventDefault();
   }
   else{
       errorText=true;
-      $event.target.classList.add('border-dashed');
-      $event.target.classList.remove('border-teal-600');
-      $event.target.classList.add('border-gray-300');
+      $event.currentTarget.classList.add('border-dashed');
+      $event.currentTarget.classList.remove('border-teal-600');
+      $event.currentTarget.classList.add('border-gray-300');
   }
+  dragCounter=0;
 " @dragover="
   $event.preventDefault();
   readyToDrop=true;
 " @dragleave="
+  dragCounter--;
+  if(dragCounter>0) return;
   readyToDrop=false;
-  $event.target.classList.add('border-dashed');
-  $event.target.classList.remove('border-teal-600');
-  $event.target.classList.add('border-gray-300');
+  $event.currentTarget.classList.add('border-dashed');
+  $event.currentTarget.classList.remove('border-teal-600');
+  $event.currentTarget.classList.add('border-gray-300');
 " @dragenter="
-  $event.target.classList.remove('border-dashed');
-  $event.target.classList.remove('border-gray-300');
-  $event.target.classList.add('border-teal-600');
+  $event.preventDefault();
+  dragCounter++;
+  $event.currentTarget.classList.remove('border-dashed');
+  $event.currentTarget.classList.remove('border-gray-300');
+  $event.currentTarget.classList.add('border-teal-600');
 ">
     <div class="space-y-1 text-center">
       
