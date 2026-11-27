@@ -326,7 +326,7 @@ def profile_remove_member(request, billing_account, member):
 def accept_invitation(request, invitation):
     try:
         invitation = BillingAccountMemberInvitation.objects.get(secret=invitation)
-    except:
+    except BillingAccountMemberInvitation.DoesNotExist:
         message = "Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
         messages.error(request, message)
         if request.user.can_view_bookings():
