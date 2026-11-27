@@ -329,12 +329,12 @@ def accept_invitation(request, invitation):
     except:
         message = f"Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
         messages.error(request, message)
-        return redirect("users_incomplete")
+        return redirect("billing_accounts_other_memberships")
 
     if invitation.billing_account.owner == request.user:
         message = f"You cannot become a member of a billing account you own."
         messages.error(request, message)
-        return redirect("users_incomplete")
+        return redirect("billing_accounts_other_memberships")
     else:
         member = BillingAccountMember()
 
