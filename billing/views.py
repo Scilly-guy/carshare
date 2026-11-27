@@ -327,7 +327,7 @@ def accept_invitation(request, invitation):
     try:
         invitation = BillingAccountMemberInvitation.objects.get(secret=invitation)
     except:
-        message = f"Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
+        message = "Something went wrong with the invitation, please ask whoever sent it to check it is still valid or to send a new one."
         messages.error(request, message)
         if request.user.can_view_bookings():
             return redirect("billing_accounts_other_memberships")
