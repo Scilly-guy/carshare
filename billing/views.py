@@ -248,7 +248,8 @@ def profile_manage_members(request, billing_account):
         if form.is_valid():
             email_address = form.cleaned_data["email"]
             existing_invitation = BillingAccountMemberInvitation.objects.filter(
-                billing_account=billing_account, email=email_address).first()
+                billing_account=billing_account, email=email_address
+            ).first()
             if existing_invitation:
                 messages.error(
                     request,
@@ -262,7 +263,9 @@ def profile_manage_members(request, billing_account):
                     "user": request.user,
                     "billing_account": billing_account,
                     "invite_url": request.build_absolute_uri(
-                        reverse("billing_account_accept_invitation", args=(invite.secret,))
+                        reverse(
+                            "billing_account_accept_invitation", args=(invite.secret,)
+                        )
                     ),
                     "signup_url": request.build_absolute_uri(reverse("account_signup")),
                 }
